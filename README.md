@@ -12,15 +12,15 @@ The application reads its configuration from `config.yaml`. The configuration fi
 
 ### Build image:
 
-    ```sh
-    docker buildx build --platform linux/amd64 --tag coredns-reload:v1.0 . --load
-    ```
+```sh
+docker buildx build --platform linux/amd64 --tag coredns-reload:v1.0 . --load
+```
 
 ### Export image:
 
-    ```sh
-    docker save coredns-reload -o image.tar
-    ```
+```sh
+docker save coredns-reload -o image.tar
+```
 
 ### Deploy:
 
