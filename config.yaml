@@ -1,0 +1,6 @@
+
+interval: 5
+
+resolvConf: /mnt/c/Users/crmendes/test/resolv.conf
+corednsConfDir: /mnt/c/Users/crmendes/test/coredns/conf/
+corednsCorefile: /mnt/c/Users/crmendes/test/coredns/Corefile
