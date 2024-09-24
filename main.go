@@ -77,15 +77,48 @@ func checkNameserver(resolvConf string) bool {
 	return nameserverRegex.Match(data)
 }
 
+func getSearchDomains(resolvPath string) []string {
+	data, err := os.ReadFile(resolvPath)
+	if err != nil {
+		log.Printf("failed to read resolv.conf: %v", err)
+		return nil
+	}
+
+	var domains []string
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "search ") {
+			domains = strings.Fields(line)[1:]
+			break
+		}
+	}
+	return domains
+}
+
 func copyCorefile(config *Config, removeForward bool) {
+	internalResolvConf := "/etc/resolv.conf"
+
 	data, err := os.ReadFile(config.CoreDNSCorefile)
 	if err != nil {
 		log.Fatalf("failed to read coredns config: %v", err)
 	}
 
 	if removeForward {
-		re := regexp.MustCompile(`(?m)forward \. .*`)
-		data = re.ReplaceAll(data, []byte("rewrite name regex .* cluster.local"))
+		errors := regexp.MustCompile(`errors`)
+		forward := regexp.MustCompile(`(?m:^\s*forward \. .+$)`)
+
+		data = errors.ReplaceAll(data, []byte("# errors"))
+
+		searchDomains := getSearchDomains(internalResolvConf)
+
+		var rewriteRules []string
+		for _, domain := range searchDomains {
+			rewriteRules = append(rewriteRules, "    rewrite name suffix ."+domain+". .")
+		}
+
+		rewriteBlock := strings.Join(rewriteRules, "\n")
+
+		data = forward.ReplaceAll(data, []byte(rewriteBlock))
 	}
 
 	fileName := filepath.Base(config.CoreDNSCorefile)
